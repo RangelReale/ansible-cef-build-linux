@@ -1,0 +1,17 @@
+---
+#admin_password: ""
+azure_location: "eastus"
+azure_upload_distrib_blob: true
+
+## Standard SSD
+# azure_vm_size_setup: "Standard_D2_v2"
+# azure_vm_size_build: "Standard_D64_v3"
+# azure_managed_disk_type: "StandardSSD_LRS"
+
+## Premium SSD
+azure_vm_size_setup: "Standard_DS3_v2"
+azure_vm_size_build: "Standard_D64s_v3"
+azure_managed_disk_type: "Premium_LRS"
+
+cef_branch: 4324
+cef_gn_defines: "is_official_build=true proprietary_codecs=true ffmpeg_branding=Chrome use_sysroot=true use_allocator=none symbol_level=1 is_cfi=false use_thin_lto=false"

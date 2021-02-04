@@ -1,0 +1,51 @@
+---
+- ansible.builtin.debug:
+    msg: 'Building CEF branch "{{ cef_branch }}"'
+
+- name: Build release
+  shell: ninja -C out/Release_GN_x64 cefsimple chrome_sandbox
+  args:
+    chdir: /cefbuild/code/chromium_git/chromium/src
+  environment:
+      PATH: /cefbuild/code/depot_tools:{{ ansible_env.PATH }}
+  when: cef_build_release | bool
+
+- name: Build debug
+  shell: ninja -C out/Debug_GN_x64 cefsimple chrome_sandbox
+  args:
+    chdir: /cefbuild/code/chromium_git/chromium/src
+  environment:
+      PATH: /cefbuild/code/depot_tools:{{ ansible_env.PATH }}
+  when: cef_build_debug | bool
+
+
+# TODO: sandbox
+
+- name: Build distrib
+  shell: ./make_distrib.sh --ninja-build --x64-build
+  args:
+    chdir: /cefbuild/code/chromium_git/chromium/src/cef/tools
+  environment:
+      PATH: /cefbuild/code/depot_tools:{{ ansible_env.PATH }}
+
+# - name: Downloading binary files
+#   block:
+#   - name: Locating binary distrib files
+#     find: 
+#       paths: /cefbuild/code/chromium_git/chromium/src/cef/binary_distrib
+#       recurse: no 
+#       patterns: "*.zip"
+#     register: binary_distrib_files
+
+#   - ansible.builtin.debug: 
+#       msg: 'filename: {{ item.path  | basename }} -- path: {{ item.path }}'
+#     with_items: "{{ binary_distrib_files.files }}"
+
+#   - name: Downloading binary distrib files
+#     fetch: 
+#       flat: true
+#       src: "{{ item.path }}"
+#       dest: "./"
+#     with_items: "{{ binary_distrib_files.files }}"
+
+#   when: cef_download_distrib | bool

@@ -1,0 +1,25 @@
+- name: Install apt dependencies
+  apt:
+    pkg:
+    - azure-cli
+  become: true
+
+- name: Azure login
+  shell: az login --service-principal --username {{ az_client_id }} --password {{ az_secret }} --tenant {{ az_tenant_id }}
+
+- name: Downloading binary files
+  block:
+  - name: Locating binary distrib files
+    find: 
+      paths: /cefbuild/code/chromium_git/chromium/src/cef/binary_distrib
+      recurse: no 
+      patterns: "*.zip"
+    register: binary_distrib_files
+
+  - ansible.builtin.debug: 
+      msg: 'filename: {{ item.path | basename }} -- path: {{ item.path }}'
+    with_items: "{{ binary_distrib_files.files }}"
+
+  - name: Uploading binary distrib files
+    shell: az storage blob upload --file {{ item.path }} --container-name fl-cs-web01 --name {{ item.path | basename }} --account-name sacsweb01
+    with_items: "{{ binary_distrib_files.files }}"

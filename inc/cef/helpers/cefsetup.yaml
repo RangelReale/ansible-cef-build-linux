@@ -1,0 +1,75 @@
+---
+- ansible.builtin.debug:
+    msg: 'Configuring CEF branch "{{ cef_branch }}"'
+
+- name: Create directories
+  block:
+  - ansible.builtin.file:
+      path: /cefbuild/code/automate
+      state: directory
+  - ansible.builtin.file:
+      path: /cefbuild/code/chromium_git
+      state: directory
+
+- name: Install build deps
+  block:
+  - name: Download CEF build deps script
+    shell: "curl 'https://chromium.googlesource.com/chromium/src/+/master/build/install-build-deps.sh?format=TEXT' | base64 -d > /cefbuild/code/install-build-deps.sh"
+    args:
+      warn: false
+  - name: Set script permission
+    ansible.builtin.file:
+      path: /cefbuild/code/install-build-deps.sh
+      mode: '755'
+  - name: Install CEF build deps
+    shell: /cefbuild/code/install-build-deps.sh --no-arm --no-chromeos-fonts --no-nacl --no-prompt
+    become: true
+
+- name: Download depot tools
+  git:
+    repo: 'https://chromium.googlesource.com/chromium/tools/depot_tools.git'
+    dest: /cefbuild/code/depot_tools
+
+- name: Add depot_tools to path
+  copy:
+    dest: /etc/profile.d/depot-tools.sh
+    mode: '0644'
+    content: 'export PATH=/cefbuild/code/depot_tools:$PATH'
+  become: true
+
+- name: Download automate-git.py
+  get_url:
+    url: https://bitbucket.org/chromiumembedded/cef/raw/master/tools/automate/automate-git.py
+    dest: /cefbuild/code/automate/automate-git.py
+
+- name: Create update.sh
+  copy:
+    dest: /cefbuild/code/chromium_git/update.sh
+    mode: '755'
+    content: |
+      #!/bin/bash
+      export CEF_USE_GN=1
+      export GN_DEFINES="{{ cef_gn_defines }}"
+      python ../automate/automate-git.py --download-dir=/cefbuild/code/chromium_git --depot-tools-dir=/cefbuild/code/depot_tools --no-distrib --no-build --branch={{ cef_branch }}
+- name: Run update.sh
+  shell: ./update.sh
+  args:
+    chdir: /cefbuild/code/chromium_git
+  environment:
+      PATH: /cefbuild/code/depot_tools:{{ ansible_env.PATH }}
+
+- name: Create create.sh
+  copy:
+    dest: /cefbuild/code/chromium_git/chromium/src/cef/create.sh
+    mode: '755'
+    content: |
+      export CEF_USE_GN=1
+      export GN_DEFINES="{{ cef_gn_defines }}"
+      ./cef_create_projects.sh
+
+- name: Run create.sh
+  shell: ./create.sh
+  args:
+    chdir: /cefbuild/code/chromium_git/chromium/src/cef
+  environment:
+      PATH: /cefbuild/code/depot_tools:{{ ansible_env.PATH }}

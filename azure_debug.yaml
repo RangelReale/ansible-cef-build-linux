@@ -1,0 +1,92 @@
+############# DEBUG 1  ###################
+- hosts: localhost
+  connection: local
+  tasks:
+  - include_vars: inc/azure/azure_vars.yaml
+  # - name: Get facts for one managed disk
+  #   azure_rm_manageddisk_info:
+  #     resource_group: rg-cefbuild-linux
+  #   register: vm_disk
+  # - debug:
+  #     msg: "Disk fact: {{ vm_disk }}"
+
+#  - name: Restart VM for distrub
+#    import_tasks: inc/azure/helpers/vm_restart_distrib.yaml
+#   - set_fact:
+#       az_subscription_id: "{{ lookup('ini',  'subscription_id section=default  file={{ ansible_env.HOME }}/.azure/credentials') }}"
+#       az_client_id: "{{ lookup('ini',  'client_id section=default  file={{ ansible_env.HOME }}/.azure/credentials') }}"
+#       az_tenant_id: "{{ lookup('ini',  'tenant section=default  file={{ ansible_env.HOME }}/.azure/credentials') }}"
+#       az_secret: "{{ lookup('ini',  'secret section=default  file={{ ansible_env.HOME }}/.azure/credentials') }}"  
+#     delegate_to: "{{ item }}"
+#     delegate_facts: True
+#     with_items: "{{ groups['all'] }}"
+#     when: item != "localhost"    
+
+- hosts: all
+  tasks:
+  - name: Get user id
+    user:
+      name: "cefuser"
+    register: disk_user
+  - debug:  
+      msg: "{{ disk_user }}"
+  - name: Check datadisk partition
+    community.general.parted:
+      device: /dev/disk/azure/scsi1/lun0
+    register: disk_info
+    become: true
+  - debug:  
+      msg: "{{ disk_info }}"
+  - name: Create partition
+    community.general.parted:
+      device: /dev/disk/azure/scsi1/lun0
+      number: 1
+      state: present
+      fs_type: ext4  
+    become: true
+  - name: Format partition
+    community.general.filesystem:
+      fstype: ext4
+      dev: "{{ disk_info.disk.dev }}1"
+    become: true
+  - name: Mount datadisk
+    mount:
+      fstype: ext4
+      src: "{{ disk_info.disk.dev }}1"
+      path: /cefbuild
+      state: mounted
+    become: true
+  - ansible.builtin.file:
+      path: /cefbuild/code
+      state: directory
+      owner: cefuser
+
+  # - block:
+  #   - name: Create a new ext4 primary partition
+  #     community.general.parted:
+  #       device: /dev/disk/azure/scsi1/lun0
+  #       number: 1
+  #       state: present
+  #       fs_type: ext4  
+  #     become: true
+  #   when: "(disk_info.partitions|length==0)"
+
+  # - debug:  
+  #     msg: "{{ az_client_id }} -- {{ az_tenant_id }} -- {{ az_secret }}"
+  # - name: Build CEF distrib vars
+  #   include_vars: inc/cef/cef_vars.yaml
+  # - name: Build CEF distrib
+  #   include_tasks: inc/cef/helpers/cefdistrib.yaml
+  # - name: Install package dependencies
+  #   win_chocolatey:
+  #     name:
+  #       - chocolatey-core.extension
+  #       - chocolatey-windowsupdate.extension
+  #     state: present
+
+  # - name: Install Azure Cli
+  #   win_chocolatey:
+  #     name: azure-cli
+
+  # - name: Azure login
+  #   win_shell: az login --service-principal --username {{ az_client_id }} --password {{ az_secret }} --tenant {{ az_tenant_id }}

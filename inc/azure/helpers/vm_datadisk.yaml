@@ -1,0 +1,42 @@
+- name: Unmount datadisk
+  mount:
+    path: /cefbuild
+    state: unmounted
+  become: true
+- name: Check datadisk partition
+  community.general.parted:
+    device: /dev/disk/azure/scsi1/lun0
+  register: disk_info
+  become: true
+- debug:  
+    msg: "Using partition {{ disk_info.disk.dev }}1"
+- name: Create partition
+  community.general.parted:
+    device: /dev/disk/azure/scsi1/lun0
+    number: 1
+    state: present
+    fs_type: ext4  
+  become: true
+- name: Format partition
+  community.general.filesystem:
+    fstype: ext4
+    dev: "{{ disk_info.disk.dev }}1"
+  become: true
+- name: Mount datadisk
+  mount:
+    fstype: ext4
+    src: "{{ disk_info.disk.dev }}1"
+    path: /cefbuild
+    state: mounted
+  become: true
+- name: Get user id
+  user:
+    name: "cefuser"
+  register: disk_user
+- name: Create build directory
+  ansible.builtin.file:
+    path: /cefbuild/code
+    state: directory
+    owner: cefuser
+    group: "{{ disk_user.group }}"
+  become: true
