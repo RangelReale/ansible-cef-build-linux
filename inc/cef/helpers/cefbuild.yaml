@@ -34,6 +34,7 @@
 #     find: 
 #       paths: /cefbuild/code/chromium_git/chromium/src/cef/binary_distrib
 #       recurse: no 
+#       get_checksum: no
 #       patterns: "*.zip"
 #     register: binary_distrib_files
 

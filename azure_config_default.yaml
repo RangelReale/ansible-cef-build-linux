@@ -2,6 +2,7 @@
 #admin_password: ""
 azure_location: "eastus"
 azure_upload_distrib_blob: true
+azure_upload_source_blob: false
 
 ## Standard SSD
 # azure_vm_size_setup: "Standard_D2_v2"
