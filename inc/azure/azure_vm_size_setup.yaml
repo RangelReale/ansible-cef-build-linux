@@ -12,7 +12,7 @@
     vars:
       restart_vm_size: "{{ azure_vm_size_setup }}"
 
-# Remount data disk, device name may changed
+# Remount data disk, device name may have changed
 - hosts: build_vm
   tasks:
   - name: Configure data disk

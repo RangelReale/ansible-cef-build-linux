@@ -14,5 +14,10 @@ azure_vm_size_setup: "Standard_DS3_v2"
 azure_vm_size_build: "Standard_D64s_v3"
 azure_managed_disk_type: "Premium_LRS"
 
+vmi_publisher: "Canonical"
+vmi_offer: "0001-com-ubuntu-server-focal"
+vmi_sku: "20_04-lts"
+vmi_version: "latest"
+
 cef_branch: 4324
 cef_gn_defines: "is_official_build=true proprietary_codecs=true ffmpeg_branding=Chrome use_sysroot=true use_allocator=none symbol_level=1 is_cfi=false use_thin_lto=false"

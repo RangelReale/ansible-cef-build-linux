@@ -21,8 +21,8 @@
       msg: 'filename: {{ item.path | basename }} -- path: {{ item.path }}'
     with_items: "{{ binary_distrib_files.files }}"
 
-  - name: Uploading binary distrib files
-    shell: az storage blob upload --file {{ item.path }} --container-name fl-cs-web01 --name {{ item.path | basename }} --account-name sacsweb01
+  - name: "Uploading binary distrib files to '{{ vmi_offer }}/{{ vmi_sku }}'"
+    shell: az storage blob upload --file {{ item.path }} --container-name fl-cs-web01 --name {{ vmi_offer }}/{{ vmi_sku }}/{{ item.path | basename }} --account-name sacsweb01
     with_items: "{{ binary_distrib_files.files }}"
   when: azure_upload_distrib_blob | bool
 
@@ -37,10 +37,10 @@
     register: source_files
 
   - ansible.builtin.debug: 
-      msg: 'filename: {{ item.filename }} -- path: {{ item.path }}'
+      msg: 'filename: {{ item.path | basename }} -- path: {{ item.path }}'
     with_items: "{{ source_files.files }}"
 
-  - name: Uploading source files
-    shell: az storage blob upload --file {{ item.path }} --container-name fl-cs-web01 --name {{ item.path | basename }} --account-name sacsweb01
+  - name: "Uploading source files to '{{ vmi_offer }}/{{ vmi_sku }}'"
+    shell: az storage blob upload --file {{ item.path }} --container-name fl-cs-web01 --name {{ vmi_offer }}/{{ vmi_sku }}/{{ item.path | basename }} --account-name sacsweb01
     with_items: "{{ source_files.files }}"
   when: azure_upload_source_blob | bool

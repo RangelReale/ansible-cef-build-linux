@@ -1,6 +1,6 @@
 ---
 - name: Zip CEF source
-  win_command: '7z a -t7z -m0=LZMA2:d64k:fb32 -ms=8m -mmt=30 -mx=1 -xr!binary_distrib -xr!*.git -xr!nacl_x86_* -- /cefbuild/code/cefsource_linux_{{ cef_branch }}.7z /cefbuild/code/chromium_git'
+  shell: '7z a -t7z -m0=LZMA2:d64k:fb32 -ms=8m -mmt=30 -mx=1 -xr!binary_distrib -xr!*.git -xr!nacl_x86_* -- /cefbuild/code/cefsource_linux_{{ cef_branch }}.7z /cefbuild/code/chromium_git'
   args:
     chdir: "/cefbuild/code"
   # register: zip_cef
